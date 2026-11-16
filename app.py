@@ -183,10 +183,13 @@ c2.metric("First date", close.index.min().strftime("%d %b %Y"))
 c3.metric("Last date", close.index.max().strftime("%d %b %Y"))
 
 st.subheader("Historical Apple closing price")
+historical_chart = close.rename("Closing Price").to_frame()
+st.line_chart(historical_chart)
 fig, ax = plt.subplots(figsize=(12, 4))
 ax.plot(close.index, close.values, linewidth=1.4)
 ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.grid(alpha=0.25)
-st.pyplot(fig, clear_figure=True); plt.close(fig)
+st.pyplot(fig, use_container_width=True);
+plt.close(fig)
 
 st.subheader("Model training and evaluation")
 st.write("Click below to train the four notebook models on this dataset. The first run may take several minutes, especially for LSTM and GRU.")
@@ -208,12 +211,14 @@ if "apple_results" in st.session_state:
             st.warning(f"{model} could not be trained in this environment: {message}")
 
     st.subheader("Actual vs predicted closing prices")
+    st.line_chart(test_predictions)
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(test.index, test.values, label="Actual", color="black", linewidth=2)
     for name, pred in predictions.items():
         ax.plot(pred.index, pred.values, label=name, alpha=0.85)
     ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.legend(); ax.grid(alpha=0.2)
-    st.pyplot(fig, clear_figure=True); plt.close(fig)
+    st.pyplot(fig, use_container_width=True);
+    plt.close(fig)
 
     st.subheader("Next 30-day forecast")
     selected_model = forecast["Selected_Model"].iloc[0]
@@ -226,12 +231,22 @@ if "apple_results" in st.session_state:
     f2.metric("30th forecast close", f"${last_forecast:,.2f}", forecast["Date"].iloc[-1].strftime("%d %b %Y"))
     f3.metric("Change across forecast", f"{change_pct:+.2f}%")
     st.info("These are 30 future weekdays generated from the last date in the uploaded dataset. Weekends are excluded; exchange holidays are not adjusted. They are model estimates, not live quotes or guaranteed prices.")
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(close.tail(120).index, close.tail(120).values, label="Recent historical close")
-    ax.plot(forecast["Date"], forecast["Predicted_Close"], marker="o", markersize=3, label="Forecast (30 weekdays)")
-    ax.axvline(close.index[-1], linestyle="--", alpha=0.6, label="Forecast starts")
-    ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.legend(); ax.grid(alpha=0.2)
-    st.pyplot(fig, clear_figure=True); plt.close(fig)
+   # Prepare data for the forecast chart
+st.subheader("Forecast chart")
+
+recent_history = close.tail(120).copy()
+recent_history.index = pd.to_datetime(recent_history.index)
+recent_history = recent_history.rename("Historical Close")
+
+forecast_chart = forecast.copy()
+forecast_chart["Date"] = pd.to_datetime(forecast_chart["Date"])
+
+future_chart = forecast_chart.set_index("Date")["Predicted_Close"]
+future_chart = future_chart.rename("Forecast Close")
+
+chart_data = pd.concat([recent_history, future_chart], axis=1)
+
+st.line_chart(chart_data) 
     st.dataframe(forecast, use_container_width=True)
 
     st.download_button("Download 30-day forecast CSV", forecast.to_csv(index=False).encode("utf-8"),
