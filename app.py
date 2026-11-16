@@ -186,7 +186,7 @@ st.subheader("Historical Apple closing price")
 fig, ax = plt.subplots(figsize=(12, 4))
 ax.plot(close.index, close.values, linewidth=1.4)
 ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.grid(alpha=0.25)
-st.pyplot(fig, use_container_width=True); plt.close(fig)
+st.pyplot(fig, clear_figure=True); plt.close(fig)
 
 st.subheader("Model training and evaluation")
 st.write("Click below to train the four notebook models on this dataset. The first run may take several minutes, especially for LSTM and GRU.")
@@ -213,7 +213,7 @@ if "apple_results" in st.session_state:
     for name, pred in predictions.items():
         ax.plot(pred.index, pred.values, label=name, alpha=0.85)
     ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.legend(); ax.grid(alpha=0.2)
-    st.pyplot(fig, use_container_width=True); plt.close(fig)
+    st.pyplot(fig, clear_figure=True); plt.close(fig)
 
     st.subheader("Next 30-day forecast")
     selected_model = forecast["Selected_Model"].iloc[0]
@@ -231,7 +231,7 @@ if "apple_results" in st.session_state:
     ax.plot(forecast["Date"], forecast["Predicted_Close"], marker="o", markersize=3, label="Forecast (30 weekdays)")
     ax.axvline(close.index[-1], linestyle="--", alpha=0.6, label="Forecast starts")
     ax.set_xlabel("Date"); ax.set_ylabel("Close price (USD)"); ax.legend(); ax.grid(alpha=0.2)
-    st.pyplot(fig, use_container_width=True); plt.close(fig)
+    st.pyplot(fig, clear_figure=True); plt.close(fig)
     st.dataframe(forecast, use_container_width=True)
 
     st.download_button("Download 30-day forecast CSV", forecast.to_csv(index=False).encode("utf-8"),
